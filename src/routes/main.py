@@ -11,29 +11,70 @@ main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/')
 def index():
-    # Resolve user context: logged-in user or None
-    uid = current_user.id if current_user.is_authenticated else None
+    # If user is not logged in, show login page
+    if not current_user.is_authenticated:
+        return render_template('login.html')
+    
+    # If user is logged in, show dashboard
+    uid = current_user.id
 
-    # Totals for this user (or zero if not logged in)
+    # Totals for this user
     total_saved = 0.0
     series = {}
     today = datetime.utcnow().date()
     week_ago = today - timedelta(days=6)
     series = {str(week_ago + timedelta(days=i)): 0.0 for i in range(7)}
 
-    if uid:
-        total_saved = (db.session.query(func.sum(Activity.co2_saved_kg))
-                       .filter_by(user_id=uid).scalar() or 0.0)
+    total_saved = (db.session.query(func.sum(Activity.co2_saved_kg))
+                   .filter_by(user_id=uid).scalar() or 0.0)
 
-        rows = (db.session
-                .query(func.date(Activity.created_at), func.sum(Activity.co2_saved_kg))
-                .filter(Activity.user_id == uid, Activity.created_at >= week_ago)
-                .group_by(func.date(Activity.created_at))
-                .all())
-        for d, s in rows:
-            series[str(d)] = float(s or 0.0)
+    rows = (db.session
+            .query(func.date(Activity.created_at), func.sum(Activity.co2_saved_kg))
+            .filter(Activity.user_id == uid, Activity.created_at >= week_ago)
+            .group_by(func.date(Activity.created_at))
+            .all())
+    for d, s in rows:
+        series[str(d)] = float(s or 0.0)
 
-    badges = evaluate_badges(uid) if uid else []
+    badges = evaluate_badges(uid)
+    leaders = top_users(limit=5)
+    quote = pick_quote()
+
+    return render_template('index.html',
+                           total_saved=round(total_saved, 3),
+                           series=series,
+                           badges=badges,
+                           leaders=leaders,
+                           quote=quote)
+
+
+@main_bp.route('/dashboard')
+def dashboard():
+    # Require authentication for dashboard
+    if not current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    
+    uid = current_user.id
+
+    # Totals for this user
+    total_saved = 0.0
+    series = {}
+    today = datetime.utcnow().date()
+    week_ago = today - timedelta(days=6)
+    series = {str(week_ago + timedelta(days=i)): 0.0 for i in range(7)}
+
+    total_saved = (db.session.query(func.sum(Activity.co2_saved_kg))
+                   .filter_by(user_id=uid).scalar() or 0.0)
+
+    rows = (db.session
+            .query(func.date(Activity.created_at), func.sum(Activity.co2_saved_kg))
+            .filter(Activity.user_id == uid, Activity.created_at >= week_ago)
+            .group_by(func.date(Activity.created_at))
+            .all())
+    for d, s in rows:
+        series[str(d)] = float(s or 0.0)
+
+    badges = evaluate_badges(uid)
     leaders = top_users(limit=5)
     quote = pick_quote()
 

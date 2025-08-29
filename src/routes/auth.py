@@ -23,19 +23,27 @@ google = oauth.register(
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
+    # If user is already logged in, redirect to dashboard
+    if current_user.is_authenticated:
+        return redirect(url_for('main.dashboard'))
+        
     if request.method == 'POST':
         username = (request.form.get('username') or '').strip().lower()
         password = request.form.get('password') or ''
         user = User.query.filter_by(username=username).first()
         if user and check_password_hash(user.password_hash, password):
             login_user(user, remember=True)
-            return redirect(url_for('main.index'))
+            return redirect(url_for('main.dashboard'))
         else:
             flash('Invalid credentials. 🌱 Try again!', 'error')
     return render_template('login.html')
 
 @auth_bp.route('/signup', methods=['GET', 'POST'])
 def signup():
+    # If user is already logged in, redirect to dashboard
+    if current_user.is_authenticated:
+        return redirect(url_for('main.dashboard'))
+        
     if request.method == 'POST':
         username = (request.form.get('username') or '').strip().lower()
         password = request.form.get('password') or ''
@@ -52,7 +60,7 @@ def signup():
         db.session.add(user)
         db.session.commit()
         login_user(user)
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.dashboard'))
     return render_template('signup.html')
 
 # Google OAuth routes
@@ -95,7 +103,7 @@ def google_callback():
         
         login_user(user, remember=True)
         flash(f'Welcome {name}! 🌱', 'success')
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.dashboard'))
     
     flash('Authentication failed. Please try again.', 'error')
     return redirect(url_for('auth.login'))
