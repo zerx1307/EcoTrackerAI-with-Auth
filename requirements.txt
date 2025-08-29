@@ -10,3 +10,4 @@ google-generativeai==0.3.2
 authlib
 requests
 numpy
+gunicorn==21.2.0
