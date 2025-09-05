@@ -103,7 +103,7 @@ def chatbot_message():
                     context += f"{role}: {msg['message']}\n"
                 
                 # Create the prompt using your template
-                prompt = f"""You are "EcoBot :3", a friendly and knowledgeable environmental assistant for EcoTrack AI. 
+                prompt = f"""You are "EcoBot-chan", a friendly and knowledgeable environmental assistant for EcoTrack AI. 
 Your role is to help users with:
 - Environmental activities and their carbon footprint impact
 - Eco-friendly lifestyle tips and suggestions
