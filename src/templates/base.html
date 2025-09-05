@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EcoTrack AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌱</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <style>
+    body { 
+      font-family: 'Inter', sans-serif; 
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    
+    /* Light mode styles (default) */
+    .eco-gradient { background: linear-gradient(135deg, #059669 0%, #10b981 25%, #34d399 50%, #6ee7b7 75%, #a7f3d0 100%); }
+    .eco-gradient-light { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%); }
+    .eco-gradient-dark { background: linear-gradient(135deg, #4e0606 0%, #065f46 50%, #047857 100%); }
+    .glass-effect { background: rgba(42, 178, 153, 0.278); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.18); }
+    .eco-shadow { box-shadow: 0 20px 25px -5px rgba(16, 185, 129, 0.1), 0 10px 10px -5px rgba(16, 185, 129, 0.04); }
+    .eco-glow { box-shadow: 0 0 30px rgba(16, 185, 129, 0.3); }
+    .animate-float { animation: float 6s ease-in-out infinite; }
+    @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+    .leaf-pattern { background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2310b981' fill-opacity='0.03'%3E%3Cpath d='M20 20c0-5.5-4.5-10-10-10s-10 4.5-10 10 4.5 10 10 10 10-4.5 10-10zm10 0c0-5.5-4.5-10-10-10s-10 4.5-10 10 4.5 10 10 10 10-4.5 10-10z'/%3E%3C/g%3E%3C/svg%3E"); }
+    
+    /* Dark mode toggle switch */
+    .theme-switch {
+      position: relative;
+      width: 60px;
+      height: 30px;
+      background: #e5e7eb;
+      border-radius: 15px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .theme-switch.dark {
+      background: #374151;
+    }
+    
+    .theme-switch-slider {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 24px;
+      height: 24px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .theme-switch.dark .theme-switch-slider {
+      transform: translateX(30px);
+      background: #1f2937;
+    }
+    
+    /* Dark mode styles */
+    .dark {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #475569 75%, #64748b 100%) !important;
+      color: #e2e8f0 !important;
+    }
+    
+    .dark .glass-effect {
+      background: rgba(30, 41, 59, 0.6) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    .dark .bg-white-60,
+    .dark .bg-white-80 {
+      background: rgba(30, 41, 59, 0.8) !important;
+    }
+    
+    .dark .text-emerald-800 {
+      color: #a7f3d0 !important;
+    }
+    
+    .dark .text-emerald-700 {
+      color: #6ee7b7 !important;
+    }
+    
+    .dark .text-emerald-600-80 {
+      color: rgba(110, 231, 183, 0.8) !important;
+    }
+    
+    .dark .border-emerald-200 {
+      border-color: #374151 !important;
+    }
+    
+    /* Dark mode floating elements */
+    .dark .bg-green-200 {
+      background: rgba(34, 197, 94, 0.2) !important;
+    }
+    
+    .dark .bg-emerald-200 {
+      background: rgba(16, 185, 129, 0.2) !important;
+    }
+    
+    .dark .bg-teal-200 {
+      background: rgba(20, 184, 166, 0.2) !important;
+    }
+    
+    .dark .bg-green-300 {
+      background: rgba(34, 197, 94, 0.3) !important;
+    }
+    
+    /* Floating Chat Button */
+    .chat-button {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 60px;
+      height: 60px;
+      background: rgba(241, 245, 249, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #059669;
+      font-size: 24px;
+      text-decoration: none;
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      animation: float 3s ease-in-out infinite;
+    }
+    
+    .chat-button:hover {
+      transform: scale(1.05);
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid rgba(16, 185, 129, 0.5);
+      box-shadow: 0 8px 30px rgba(16, 185, 129, 0.25);
+    }
+    
+    .dark .chat-button {
+      background: rgba(241, 245, 249, 0.9);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #059669;
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);
+    }
+    
+    .dark .chat-button:hover {
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid rgba(16, 185, 129, 0.5);
+      box-shadow: 0 8px 30px rgba(16, 185, 129, 0.25);
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-gray-100 via-cyan-100 to-gray-300 text-gray-800 overflow-x-hidden">
+  <!-- Floating Elements Background -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <div class="absolute top-20 left-10 w-32 h-32 bg-green-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-float"></div>
+    <div class="absolute top-40 right-20 w-24 h-24 bg-emerald-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-float" style="animation-delay: 2s;"></div>
+    <div class="absolute bottom-20 left-20 w-40 h-40 bg-teal-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-float" style="animation-delay: 4s;"></div>
+    <div class="absolute bottom-40 right-10 w-28 h-28 bg-green-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-float" style="animation-delay: 1s;"></div>
+  </div>
+
+  <nav class="relative z-40 glass-effect border-b border-white/30 sticky top-0">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <!-- Left: Logo -->
+        <div class="flex items-center">
+          <a href="/" class="flex items-center gap-3 font-bold text-xl text-emerald-800 hover:text-emerald-600 transition-colors">
+            <div class="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-green-400 to-emerald-500 rounded-xl text-white shadow-lg">
+              <span class="text-xl">🌱</span>
+            </div>
+            <span class="bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">EcoTrack AI</span>
+          </a>
+        </div>
+        
+        <!-- Center: Navigation Links -->
+        <div class="hidden md:flex items-center gap-8 absolute left-1/2 transform -translate-x-1/2">
+          <a href="/" class="text-emerald-700 hover:text-emerald-500 font-medium transition-colors relative group">
+            Dashboard
+            <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-500 transition-all group-hover:w-full"></span>
+          </a>
+          <a href="{{ url_for('main.leaderboard_page') }}" class="text-emerald-700 hover:text-emerald-500 font-medium transition-colors relative group">
+            Leaderboard
+            <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-500 transition-all group-hover:w-full"></span>
+          </a>
+        </div>
+        
+        <!-- Right: Theme Toggle + Auth Buttons -->
+        <div class="flex items-center gap-4">
+          <!-- Dark Mode Toggle -->
+          <div class="theme-switch" onclick="toggleTheme()" id="themeToggle">
+            <div class="theme-switch-slider">
+              <span id="themeIcon">⛅</span>
+            </div>
+          </div>
+          
+          {% if current_user.is_authenticated %}
+            <div class="hidden md:flex items-center gap-3">
+              <div class="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/60 backdrop-blur">
+                <div class="w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  {{ current_user.username[0].upper() }}
+                </div>
+                <span class="text-emerald-800 font-medium">{{ current_user.username }}</span>
+              </div>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" class="px-6 py-2.5 rounded-xl bg-white/80 text-emerald-700 hover:bg-white font-medium transition-all hover:shadow-lg">
+              Logout
+            </a>
+          {% else %}
+            <a href="{{ url_for('auth.login') }}" class="px-6 py-2.5 rounded-xl eco-gradient text-white hover:eco-glow font-medium transition-all shadow-lg">
+              Log in
+            </a>
+            <a href="{{ url_for('auth.signup') }}" class="px-6 py-2.5 rounded-xl bg-white/80 text-emerald-700 border border-emerald-200 hover:bg-white font-medium transition-all hover:shadow-lg">
+              Sign up
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </nav>
+  <main class="relative z-10 max-w-7xl mx-auto px-6 py-12">
+    {% block content %}{% endblock %}
+  </main>
+  
+  <footer class="relative z-10 max-w-7xl mx-auto px-6 py-16">
+    <div class="text-center">
+      <div class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-white/60 backdrop-blur text-emerald-700 font-medium shadow-lg">
+        <span class="text-lg">🌱</span>
+        <span>Built by BreakingDawn | CodeSynthesis Hackathon</span>
+      </div>
+      <p class="mt-4 text-emerald-600/80 text-sm">
+        &copy; 2025 EcoTrack AI. All rights reserved.
+      </p>
+    </div>
+  </footer>
+  
+  <!-- Floating Chat Button -->
+  <a href="{{ url_for('main.chatbot') }}" class="chat-button" title="Chat with EcoBot">
+    <img src="{{ url_for('static', filename='chat.svg') }}" alt="Chat" class="w-6 h-6">
+  </a>
+  
+  <script>
+    // Theme toggle functionality
+    function toggleTheme() {
+      const body = document.body;
+      const themeToggle = document.getElementById('themeToggle');
+      const themeIcon = document.getElementById('themeIcon');
+      
+      // Add a subtle animation effect
+      themeToggle.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        themeToggle.style.transform = 'scale(1)';
+      }, 150);
+      
+      if (body.classList.contains('dark')) {
+        // Switch to light mode
+        body.classList.remove('dark');
+        themeToggle.classList.remove('dark');
+        themeIcon.textContent = '⛅';
+        localStorage.setItem('theme', 'light');
+        
+        // Update meta theme-color for mobile browsers
+        updateThemeColor('#f8fafc');
+      } else {
+        // Switch to dark mode
+        body.classList.add('dark');
+        themeToggle.classList.add('dark');
+        themeIcon.textContent = '🌙';
+        localStorage.setItem('theme', 'dark');
+        
+        // Update meta theme-color for mobile browsers
+        updateThemeColor('#0f172a');
+      }
+    }
+    
+    // Function to update theme color meta tag
+    function updateThemeColor(color) {
+      let themeColorMeta = document.querySelector('meta[name="theme-color"]');
+      if (!themeColorMeta) {
+        themeColorMeta = document.createElement('meta');
+        themeColorMeta.setAttribute('name', 'theme-color');
+        document.head.appendChild(themeColorMeta);
+      }
+      themeColorMeta.setAttribute('content', color);
+    }
+    
+    // Initialize theme on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      const savedTheme = localStorage.getItem('theme');
+      const themeToggle = document.getElementById('themeToggle');
+      const themeIcon = document.getElementById('themeIcon');
+      
+      // Check for system preference if no saved theme
+      if (!savedTheme) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (prefersDark) {
+          document.body.classList.add('dark');
+          themeToggle.classList.add('dark');
+          themeIcon.textContent = '🌙';
+          localStorage.setItem('theme', 'dark');
+          updateThemeColor('#0f172a');
+        } else {
+          updateThemeColor('#f8fafc');
+        }
+      } else if (savedTheme === 'dark') {
+        document.body.classList.add('dark');
+        themeToggle.classList.add('dark');
+        themeIcon.textContent = '🌙';
+        updateThemeColor('#0f172a');
+      } else {
+        // Default to light mode
+        document.body.classList.remove('dark');
+        themeToggle.classList.remove('dark');
+        themeIcon.textContent = '⛅';
+        updateThemeColor('#f8fafc');
+      }
+      
+      // Listen for system theme changes
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+        if (!localStorage.getItem('theme')) {
+          if (e.matches) {
+            document.body.classList.add('dark');
+            themeToggle.classList.add('dark');
+            themeIcon.textContent = '🌙';
+            updateThemeColor('#0f172a');
+          } else {
+            document.body.classList.remove('dark');
+            themeToggle.classList.remove('dark');
+            themeIcon.textContent = '⛅';
+            updateThemeColor('#f8fafc');
+          }
+        }
+      });
+    });
+  </script>
+  
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

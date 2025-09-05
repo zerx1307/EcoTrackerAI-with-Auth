@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen flex flex-col">
+  <!-- Header -->
+  <div class="text-center mb-8">
+    <div class="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/60 backdrop-blur text-emerald-700 font-medium shadow-lg">
+      <span class="text-2xl">🤖</span>
+      <h1 class="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">EcoBot Assistant</h1>
+    </div>
+    <p class="mt-4 text-emerald-600/80 max-w-2xl mx-auto">
+      Ask me anything about eco-friendly activities, carbon footprints, or get personalized sustainability tips!
+    </p>
+  </div>
+
+  <!-- Chat Container -->
+  <div class="flex-1 max-w-4xl mx-auto w-full">
+    <div class="glass-effect rounded-2xl shadow-xl overflow-hidden">
+      
+      <!-- Chat Messages Area -->
+      <div id="chatMessages" class="h-96 overflow-y-auto p-6 space-y-4 bg-white/20 backdrop-blur">
+        <!-- Welcome Message -->
+        <div class="flex items-start gap-3">
+          <div class="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
+            <span class="text-white text-sm">🤖</span>
+          </div>
+          <div class="bg-white/80 backdrop-blur rounded-2xl rounded-tl-none px-4 py-3 max-w-md">
+            <p class="text-gray-800">Hi! I'm EcoBot, your sustainability assistant. Ask me about eco-friendly activities, carbon savings, or tips for a greener lifestyle! 🌱</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Input Area -->
+      <div class="border-t border-white/20 p-4 bg-white/10 backdrop-blur">
+        <form id="chatForm" class="flex gap-3">
+          <input 
+            type="text" 
+            id="messageInput" 
+            placeholder="Ask about eco-activities, carbon savings, green tips..." 
+            class="flex-1 px-4 py-3 rounded-xl bg-white/80 backdrop-blur border border-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-800 placeholder-gray-500"
+            autocomplete="off"
+            required
+          >
+          <button 
+            type="submit" 
+            id="sendButton"
+            class="px-6 py-3 rounded-xl eco-gradient text-white hover:eco-glow font-medium transition-all shadow-lg flex items-center gap-2"
+          >
+            <span id="sendIcon">📤</span>
+            <span id="sendText">Send</span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Quick Suggestions -->
+    <div class="mt-6 text-center">
+      <p class="text-emerald-600/80 text-sm mb-3">Try asking about:</p>
+      <div class="flex flex-wrap justify-center gap-2">
+        <button onclick="sendQuickMessage('How much CO2 can I save by cycling instead of driving?')" class="px-4 py-2 rounded-xl bg-white/60 hover:bg-white/80 text-emerald-700 text-sm transition-all">
+          🚴 Cycling benefits
+        </button>
+        <button onclick="sendQuickMessage('What are some easy ways to reduce my carbon footprint?')" class="px-4 py-2 rounded-xl bg-white/60 hover:bg-white/80 text-emerald-700 text-sm transition-all">
+          🌱 Reduce footprint
+        </button>
+        <button onclick="sendQuickMessage('How can I make my home more eco-friendly?')" class="px-4 py-2 rounded-xl bg-white/60 hover:bg-white/80 text-emerald-700 text-sm transition-all">
+          🏠 Green home tips
+        </button>
+        <button onclick="sendQuickMessage('What foods have the lowest environmental impact?')" class="px-4 py-2 rounded-xl bg-white/60 hover:bg-white/80 text-emerald-700 text-sm transition-all">
+          🥬 Sustainable food
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const chatMessages = document.getElementById('chatMessages');
+const chatForm = document.getElementById('chatForm');
+const messageInput = document.getElementById('messageInput');
+const sendButton = document.getElementById('sendButton');
+const sendIcon = document.getElementById('sendIcon');
+const sendText = document.getElementById('sendText');
+
+// Auto-scroll to bottom of chat
+function scrollToBottom() {
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Add message to chat
+function addMessage(message, isUser = false, isTyping = false) {
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `flex items-start gap-3 ${isUser ? 'flex-row-reverse' : ''}`;
+  
+  const avatar = document.createElement('div');
+  avatar.className = `flex-shrink-0 w-8 h-8 ${isUser ? 'bg-gradient-to-r from-emerald-500 to-green-500' : 'bg-gradient-to-r from-green-400 to-emerald-500'} rounded-full flex items-center justify-center`;
+  avatar.innerHTML = `<span class="text-white text-sm">${isUser ? '👤' : '🤖'}</span>`;
+  
+  const messageContent = document.createElement('div');
+  messageContent.className = `${isUser ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-2xl rounded-tr-none' : 'bg-white/80 backdrop-blur text-gray-800 rounded-2xl rounded-tl-none'} px-4 py-3 max-w-md`;
+  
+  if (isTyping) {
+    messageContent.innerHTML = `
+      <div class="flex items-center gap-1">
+        <div class="flex gap-1">
+          <div class="w-2 h-2 bg-emerald-400 rounded-full animate-bounce"></div>
+          <div class="w-2 h-2 bg-emerald-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+          <div class="w-2 h-2 bg-emerald-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+        </div>
+        <span class="text-sm text-gray-600 ml-2">EcoBot is typing...</span>
+      </div>
+    `;
+  } else {
+    messageContent.innerHTML = `<p>${message}</p>`;
+  }
+  
+  messageDiv.appendChild(avatar);
+  messageDiv.appendChild(messageContent);
+  chatMessages.appendChild(messageDiv);
+  scrollToBottom();
+  
+  return messageContent;
+}
+
+// Show loading state
+function setLoading(loading) {
+  sendButton.disabled = loading;
+  if (loading) {
+    sendIcon.textContent = '⏳';
+    sendText.textContent = 'Sending...';
+    sendButton.classList.add('opacity-75');
+  } else {
+    sendIcon.textContent = '📤';
+    sendText.textContent = 'Send';
+    sendButton.classList.remove('opacity-75');
+  }
+}
+
+// Send message to backend
+async function sendMessage(message) {
+  try {
+    const response = await fetch('/chatbot/message', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message: message })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      return data.response;
+    } else {
+      throw new Error(data.error || 'Failed to get response');
+    }
+  } catch (error) {
+    console.error('Chat error:', error);
+    return "I'm sorry, I'm having trouble connecting right now. Please try again later! 🤖";
+  }
+}
+
+// Handle form submission
+chatForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const message = messageInput.value.trim();
+  if (!message) return;
+  
+  // Add user message
+  addMessage(message, true);
+  messageInput.value = '';
+  
+  // Show loading state
+  setLoading(true);
+  const typingMessage = addMessage('', false, true);
+  
+  // Get bot response
+  const response = await sendMessage(message);
+  
+  // Remove typing indicator and add response
+  typingMessage.parentElement.remove();
+  addMessage(response, false);
+  
+  setLoading(false);
+});
+
+// Handle quick suggestion buttons
+function sendQuickMessage(message) {
+  messageInput.value = message;
+  chatForm.dispatchEvent(new Event('submit'));
+}
+
+// Focus input on page load
+messageInput.focus();
+
+// Add some example interactions on page load
+setTimeout(() => {
+  addMessage("💡 Try asking me questions like 'How much CO2 does recycling save?' or 'Give me tips for sustainable travel'", false);
+}, 1000);
+</script>
+
+<style>
+.glass-effect {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.dark .glass-effect {
+  background: rgba(30, 41, 59, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Custom scrollbar for chat */
+#chatMessages::-webkit-scrollbar {
+  width: 6px;
+}
+
+#chatMessages::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+#chatMessages::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.3);
+  border-radius: 3px;
+}
+
+#chatMessages::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 0.5);
+}
+
+/* Animation for typing indicator */
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  } 40% {
+    transform: scale(1);
+  }
+}
+</style>
+{% endblock %}
